@@ -1,4 +1,4 @@
-const PREFIX = "http://localhost:3000/";
+const PREFIX = "http://localhost:3000";
 
 const req = (url, options = {}) => {
   const { body } = options;
@@ -23,20 +23,50 @@ const req = (url, options = {}) => {
   );
 };
 
-export const getNotes = ({ age, search, page } = {}) => {};
+export const getNotes = async ({ age, search, page } = {}) => {
+  return await fetch(`${PREFIX}/notes?age=${age}&search=${search}&page=${page}`);
+};
 
-export const createNote = (title, text) => {};
+export const createNote = async (title, text) => {
+  await fetch(`${PREFIX}/notes`, {
+    method: "POST",
+    data: { title, text },
+  });
+};
 
-export const getNote = (id) => {};
+export const getNote = async (id) => {
+  return await fetch(`${PREFIX}/notes/${id}`);
+};
 
-export const archiveNote = {};
+export const archiveNote = async (id) => {
+  await fetch(`${PREFIX}/notes/${id}/archive`, {
+    method: "POST",
+  });
+};
 
-export const unarchiveNote = {};
+export const unarchiveNote = async () => {
+  await fetch(`${PREFIX}/notes/${id}/unarchive`, {
+    method: "POST",
+  });
+};
 
-export const editNote = (id, title, text) => {};
+export const editNote = async (id, title, text) => {
+  await fetch(`${PREFIX}/notes/${id}`, {
+    method: "PATCH",
+    data: { title, text },
+  });
+};
 
-export const deleteNote = (id) => {};
+export const deleteNote = async (id) => {
+  await fetch(`${PREFIX}/notes/${id}`, {
+    method: "DELETE",
+  });
+};
 
-export const deleteAllArchived = () => {};
+export const deleteAllArchived = async () => {
+  await fetch(`${PREFIX}/notes`, {
+    method: "DELETE",
+  });
+};
 
 export const notePdfUrl = (id) => {};
