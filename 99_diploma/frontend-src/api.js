@@ -19,7 +19,7 @@ const req = (url, options = {}) => {
       ? res.json()
       : res.text().then((message) => {
           throw new Error(message);
-        })
+        }),
   );
 };
 

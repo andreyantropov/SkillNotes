@@ -77,7 +77,7 @@ app.get("/logout", auth(), async (req, res) => {
 });
 
 app.get("/notes", auth(), async (req, res) => {
-  const age = req.query.age || 1000 * 60 * 60 * 24 * 7;
+  const age = req.query.age || '1week';
   const search = req.query.search;
   const page = req.query.page || 1;
 
@@ -85,7 +85,7 @@ app.get("/notes", auth(), async (req, res) => {
   res.json(notes);
 });
 
-app.get("/notes/:id".auth(), async (req, res) => {
+app.get("/notes/:id", auth(), async (req, res) => {
   const id = req.params.id;
   const notes = await readNoteById(id, req.user.id);
   res.json(notes);
@@ -191,8 +191,16 @@ const readNotes = async (userId, age, search, page = 1) => {
 
   let query = knex("notes").where({ user_id: userId });
 
-  if (age) {
-    query = query.where("create_at", ">=", Date.now() - parseInt(age) * 24 * 60 * 60 * 1000);
+  if (age && age !== 'alltime') {
+    if (age === '1week' ) {
+      query = query.where("created_at", ">=", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+    } else if (age === '1month') {
+      query = query.where("created_at", ">=", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+    } else if (age === '3month') {
+      query = query.where("created_at", ">=", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
+    } else if (age === 'archive') {
+      query = query.where({ is_archive: true });
+    }
   }
 
   if (search) {
@@ -250,13 +258,3 @@ const deleteArchiveNotes = async (userId) =>
     id: id,
     is_archive: true,
   });
-
-const filterNotes = async (userId, from, to) =>
-  await knex("notes")
-    .select()
-    .where({
-      user_id: userId,
-    })
-    .whereBetween({
-      created_at: [from, to],
-    });
