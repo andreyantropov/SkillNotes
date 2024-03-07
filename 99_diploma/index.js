@@ -76,6 +76,57 @@ app.get("/logout", auth(), async (req, res) => {
   res.clearCookie("sessionId").redirect("/");
 });
 
+app.get("/notes", auth(), async (req, res) => {
+  const age = req.query.age || 1000 * 60 * 60 * 24 * 7;
+  const search = req.query.search;
+  const page = req.query.page || 1;
+
+  const notes = readNotes(req.user.id, age, search, page);
+  res.json(notes);
+});
+
+app.get("/notes/:id".auth(), async (req, res) => {
+  const id = req.params.id;
+  const notes = await readNoteById(id, req.user.id);
+  res.json(notes);
+});
+
+app.post("/notes", auth(), async (req, res) => {
+  const { title, text } = req.body;
+  const newNote = await createNote(req.user.id, title, text);
+  res.status(201).json(newNote);
+});
+
+app.patch("/notes/:id", auth(), async (req, res) => {
+  const id = req.params.id;
+  const { title, text } = req.body;
+  await updateNote(id, req.user.id, title, text);
+  res.status(201);
+});
+
+app.post("/notes/:id/archive", auth(), async (req, res) => {
+  const id = req.params.id;
+  await archiveNote(id, req.user.id);
+  res.status(201);
+});
+
+app.post("/notes/:id/unarchive", auth(), async (req, res) => {
+  const id = req.params.id;
+  await unarchiveNote(id, req.user.id);
+  res.status(201);
+});
+
+app.delete("/notes/:id", auth(), async (req, res) => {
+  const id = req.params.id;
+  await deleteNote(id, req.user.id);
+  res.status(201);
+});
+
+app.delete("/notes", auth(), async (req, res) => {
+  await deleteArchiveNotes(id, req.user.id);
+  res.status(201);
+});
+
 app.use((err, req, res, next) => {
   console.error(err.message);
   res.status(404).send(err.message);
@@ -135,3 +186,77 @@ const deleteSession = async (sessionId) => {
   await knex("sessions").where({ session_id: sessionId }).delete();
 };
 
+const readNotes = async (userId, age, search, page = 1) => {
+  const offset = 20 * (page - 1);
+
+  let query = knex("notes").where({ user_id: userId });
+
+  if (age) {
+    query = query.where("create_at", ">=", Date.now() - parseInt(age) * 24 * 60 * 60 * 1000);
+  }
+
+  if (search) {
+    query = query.where("text", "like", `%${search}%`).orWhere("title", "like", `%${search}%`);
+  }
+
+  return await query.limit(20).offset(offset);
+};
+
+const readNoteById = async (id, userId) =>
+  await knex("notes").select().where({
+    is: id,
+    iser_id: userId,
+  });
+
+const createNote = async (userId, title, text) => {
+  const newNote = await knex("notes").insert({
+    user_id: userId,
+    title: title,
+    text: text,
+  });
+  return newNote;
+};
+
+const updateNote = async (id, userId, title, text) =>
+  await knex("notes")
+    .update({
+      title: title,
+      text: text,
+    })
+    .where({ id: id, user_id: userId });
+
+const archiveNote = async (id, userId) =>
+  await knex("notes")
+    .update({
+      is_archive: true,
+    })
+    .where({ id: id, user_id: userId });
+
+const unarchiveNote = async (id, userId) =>
+  await knex("notes")
+    .update({
+      is_archive: false,
+    })
+    .where({ id: id, user_id: userId });
+
+const deleteNote = async (id, userId) =>
+  await knex("notes").delete({
+    id: id,
+    user_id: userId,
+  });
+
+const deleteArchiveNotes = async (userId) =>
+  await knex("notes").delete({
+    id: id,
+    is_archive: true,
+  });
+
+const filterNotes = async (userId, from, to) =>
+  await knex("notes")
+    .select()
+    .where({
+      user_id: userId,
+    })
+    .whereBetween({
+      created_at: [from, to],
+    });
