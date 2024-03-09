@@ -7,8 +7,8 @@
   "main": "index.js",
   "scripts": {
     "db:migrate": "knex migrate:latest",
-    "start": "cross-env npm run db:migrate && node index.js",
-    "dev": "cross-env npm run db:migrate && nodemon index.js -e js,njk",
+    "start": "cross-env npm run db:migrate && npm run build && node index.js",
+    "dev": "cross-env npm run db:migrate && npm run build && nodemon index.js -e js,njk",
     "test": "echo \"Tests passed\" && exit 0",
     "prettify": "prettier --write",
     "prettify:all": "prettier --write \"./**/*.{js,json}\"",
