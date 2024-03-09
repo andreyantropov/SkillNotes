@@ -18,27 +18,50 @@ const knex = require("knex")({
 });
 
 router.post("/signup", bodyParser.urlencoded({ extended: false }), async (req, res) => {
-  const { username, password } = req.body;
-  await createUser(username, password);
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+    const id = await createUser(username, password);
+    const sessionId = await createSession(id);
+    res.cookie("sessionId", sessionId, { httpOnly: true }).redirect("/dashboard");
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.post("/login", bodyParser.urlencoded({ extended: false }), async (req, res) => {
-  const { username, password } = req.body;
-  const user = await findUserByUsername(username);
-  if (!user || user.password != hash(password)) {
-    res.sendStatus(401);
-    return;
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+    const user = await findUserByUsername(username);
+    if (!user || user.password != hash(password)) {
+      res.sendStatus(401);
+      return;
+    }
+    const sessionId = await createSession(user.id);
+    res.cookie("sessionId", sessionId, { httpOnly: true }).redirect("/dashboard");
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
   }
-  const sessionId = await createSession(user.id);
-  res.cookie("sessionId", sessionId, { httpOnly: true }).redirect("/dashboard");
 });
 
 router.get("/logout", auth(), async (req, res) => {
-  if (!req.user) {
-    return res.redirect("/");
+  try {
+    if (!req.user) {
+      return res.redirect("/");
+    }
+    await deleteSession(req.sessionId);
+    res.clearCookie("sessionId").redirect("/");
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
   }
-  await deleteSession(req.sessionId);
-  res.clearCookie("sessionId").redirect("/");
 });
 
 const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");
@@ -51,10 +74,12 @@ const findUserByUsername = async (username) =>
     .then((results) => results[0]);
 
 const createUser = async (username, password) => {
-  const newUser = await knex("users").insert({
-    username: username,
-    password: hash(password),
-  });
+  const newUser = await knex("users")
+    .insert({
+      username: username,
+      password: hash(password),
+    })
+    .returning('id');
   return newUser;
 };
 
@@ -70,7 +95,10 @@ const createSession = async (userId) => {
 };
 
 const deleteSession = async (sessionId) => {
-  await knex("sessions").where({ session_id: sessionId }).delete();
+  await knex("sessions")
+    .where({ session_id: sessionId })
+    .delete()
+    .returning('id');
 };
 
 module.exports = router;

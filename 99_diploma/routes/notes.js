@@ -14,54 +14,114 @@ const knex = require("knex")({
 });
 
 router.get("/note", auth(), async (req, res) => {
-  const age = req.query.age || '1week';
-  const search = req.query.search;
-  const page = req.query.page || 1;
+  try {
+    const age = req.query.age || '1week';
+    const search = req.query.search;
+    const page = req.query.page || 1;
 
-  const notes = readNotes(req.user.id, age, search, page);
-  res.json(notes);
+    const notes = readNotes(req.user.id, age, search, page);
+    res.json(notes);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.get("/note/:id", auth(), async (req, res) => {
-  const id = req.params.id;
-  const notes = await readNoteById(id, req.user.id);
-  res.json(notes);
+  try {
+    const id = req.params.id;
+    const notes = await readNoteById(id, req.user.id);
+    if (notes) {
+      res.json(notes);
+    } else {
+      res.status(404).json({ message: 'Note not found' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.post("/note/new", auth(), async (req, res) => {
-  const { title, text } = req.body;
-  const newNote = await createNote(req.user.id, title, text);
-  res.status(201).json(newNote);
+  try {
+    const { title, text } = req.body;
+    const newNote = await createNote(req.user.id, title, text);
+    res.status(201).json(newNote);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.patch("/note/:id/edit", auth(), async (req, res) => {
-  const id = req.params.id;
-  const { title, text } = req.body;
-  await updateNote(id, req.user.id, title, text);
-  res.status(201);
+  try {
+    const id = req.params.id;
+    const { title, text } = req.body;
+    const updNote = await updateNote(id, req.user.id, title, text);
+    if (updNote) {
+      res.status(201);
+    } else {
+      res.status(404).json({ message: 'Note not found' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.post("/note/:id/archive", auth(), async (req, res) => {
-  const id = req.params.id;
-  await archiveNote(id, req.user.id);
-  res.status(201);
+  try {
+    const id = req.params.id;
+    const updNote = await archiveNote(id, req.user.id);
+    if (updNote) {
+      res.status(201);
+    } else {
+      res.status(404).json({ message: 'Note not found' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.post("/note/:id/unarchive", auth(), async (req, res) => {
-  const id = req.params.id;
-  await unarchiveNote(id, req.user.id);
-  res.status(201);
+  try {
+    const id = req.params.id;
+    const updNote = await unarchiveNote(id, req.user.id);
+    if (updNote) {
+      res.status(201);
+    } else {
+      res.status(404).json({ message: 'Note not found' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.delete("/note/:id", auth(), async (req, res) => {
-  const id = req.params.id;
-  await deleteNote(id, req.user.id);
-  res.status(201);
+  try {
+    const id = req.params.id;
+    const updNote = await deleteNote(id, req.user.id);
+    if (updNote) {
+      res.status(201);
+    } else {
+      res.status(404).json({ message: 'Note not found' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 router.delete("/note", auth(), async (req, res) => {
-  await deleteArchiveNotes(id, req.user.id);
-  res.status(201);
+  try {
+    await deleteArchiveNotes(id, req.user.id);
+    res.status(201);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
 
 const readNotes = async (userId, age, search, page = 1) => {
@@ -94,14 +154,13 @@ const readNoteById = async (id, userId) =>
     user_id: userId,
   });
 
-const createNote = async (userId, title, text) => {
-  const newNote = await knex("notes").insert({
+const createNote = async (userId, title, text) => await knex("notes")
+  .insert({
     user_id: userId,
     title: title,
     text: text,
-  });
-  return newNote;
-};
+  })
+  .returning('*');
 
 const updateNote = async (id, userId, title, text) =>
   await knex("notes")
@@ -109,32 +168,37 @@ const updateNote = async (id, userId, title, text) =>
       title: title,
       text: text,
     })
-    .where({ id: id, user_id: userId });
+    .where({ id: id, user_id: userId })
+    .returning('*');
 
 const archiveNote = async (id, userId) =>
   await knex("notes")
     .update({
       is_archive: true,
     })
-    .where({ id: id, user_id: userId });
+    .where({ id: id, user_id: userId })
+    .returning('*');
 
 const unarchiveNote = async (id, userId) =>
   await knex("notes")
     .update({
       is_archive: false,
     })
-    .where({ id: id, user_id: userId });
+    .where({ id: id, user_id: userId })
+    .returning('*');
 
 const deleteNote = async (id, userId) =>
   await knex("notes").delete({
     id: id,
     user_id: userId,
-  });
+  })
+    .returning('id');
 
 const deleteArchiveNotes = async (userId) =>
   await knex("notes").delete({
-    id: id,
+    user_id: userId,
     is_archive: true,
-  });
+  })
+    .returning('id');
 
 module.exports = router;
