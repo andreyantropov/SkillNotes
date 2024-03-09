@@ -78,7 +78,7 @@ app.get("/logout", auth(), async (req, res) => {
 
 app.get("/dashboard", auth(), async (req, res) => {
   res.render('dashboard.njk', {
-    user: req.user,
+    username: req.user.username,
   });
 });
 
