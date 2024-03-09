@@ -13,7 +13,7 @@ const knex = require("knex")({
   },
 });
 
-router.get("/note", auth(), async (req, res) => {
+router.get("/notes", auth(), async (req, res) => {
   try {
     const age = req.query.age || '1week';
     const search = req.query.search;
@@ -27,7 +27,7 @@ router.get("/note", auth(), async (req, res) => {
   }
 });
 
-router.get("/note/:id", auth(), async (req, res) => {
+router.get("/notes/:id", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const notes = await readNoteById(id, req.user.id);
@@ -42,7 +42,7 @@ router.get("/note/:id", auth(), async (req, res) => {
   }
 });
 
-router.post("/note/new", auth(), async (req, res) => {
+router.post("/notes", auth(), async (req, res) => {
   try {
     const { title, text } = req.body;
     const newNote = await createNote(req.user.id, title, text);
@@ -53,7 +53,7 @@ router.post("/note/new", auth(), async (req, res) => {
   }
 });
 
-router.patch("/note/:id/edit", auth(), async (req, res) => {
+router.patch("/notes/:id", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const { title, text } = req.body;
@@ -69,7 +69,7 @@ router.patch("/note/:id/edit", auth(), async (req, res) => {
   }
 });
 
-router.post("/note/:id/archive", auth(), async (req, res) => {
+router.post("/notes/:id/archive", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const updNote = await archiveNote(id, req.user.id);
@@ -84,7 +84,7 @@ router.post("/note/:id/archive", auth(), async (req, res) => {
   }
 });
 
-router.post("/note/:id/unarchive", auth(), async (req, res) => {
+router.post("/notes/:id/unarchive", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const updNote = await unarchiveNote(id, req.user.id);
@@ -99,7 +99,7 @@ router.post("/note/:id/unarchive", auth(), async (req, res) => {
   }
 });
 
-router.delete("/note/:id", auth(), async (req, res) => {
+router.delete("/notes/:id", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const updNote = await deleteNote(id, req.user.id);
@@ -114,7 +114,7 @@ router.delete("/note/:id", auth(), async (req, res) => {
   }
 });
 
-router.delete("/note", auth(), async (req, res) => {
+router.delete("/notes", auth(), async (req, res) => {
   try {
     await deleteArchiveNotes(id, req.user.id);
     res.status(201);
