@@ -13,6 +13,14 @@ const knex = require("knex")({
   },
 });
 
+const Age = {
+  ONE_WEEK: '1week',
+  ONE_MONTH: '1month',
+  THREE_MONTH: '3month',
+  ALL_TIME: 'alltime',
+  ARCHIVE: 'archive',
+};
+
 router.get("/notes", auth(), async (req, res) => {
   try {
     const { age, search, page } = req.query;
@@ -125,6 +133,24 @@ const readNotes = async (userId, age = '1week', search = '', page = 1) => {
   const offset = 20 * (page - 1);
 
   let query = knex("notes").where({ user_id: userId });
+
+  switch (age) {
+    case Age.ONE_WEEK:
+      query = query.where("created_at", ">=", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+      break;
+    case Age.ONE_MONTH:
+      query = query.where("created_at", ">=", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+      break;
+    case Age.THREE_MONTH:
+      query = query.where("created_at", ">=", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
+      break;
+    case Age.ARCHIVE:
+      query = query.where({ is_archive: true });
+      break;
+    case Age.ALL_TIME:
+    default:
+      break;
+  }
 
   if (age && age !== 'alltime') {
     if (age === '1week') {
