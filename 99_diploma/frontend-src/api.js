@@ -24,7 +24,13 @@ const req = (url, options = {}) => {
 };
 
 export const getNotes = async ({ age, search, page } = {}) => {
-  return await fetch(`${PREFIX}/notes?age=${age}&search=${search}&page=${page}`);
+  const queryParams = new URLSearchParams({
+    age,
+    search,
+    page
+  });
+
+  return await fetch(`${PREFIX}/notes?${queryParams}`);
 };
 
 export const createNote = async (title, text) => {

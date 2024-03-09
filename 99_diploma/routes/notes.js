@@ -15,10 +15,7 @@ const knex = require("knex")({
 
 router.get("/notes", auth(), async (req, res) => {
   try {
-    const age = req.query.age || '1week';
-    const search = req.query.search;
-    const page = req.query.page || 1;
-
+    const { age, search, page } = req.query;
     const notes = readNotes(req.user.id, age, search, page);
     res.json(notes);
   } catch (err) {
@@ -124,7 +121,7 @@ router.delete("/notes", auth(), async (req, res) => {
   }
 });
 
-const readNotes = async (userId, age, search, page = 1) => {
+const readNotes = async (userId, age = '1week', search = '', page = 1) => {
   const offset = 20 * (page - 1);
 
   let query = knex("notes").where({ user_id: userId });
