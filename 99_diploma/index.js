@@ -76,7 +76,13 @@ app.get("/logout", auth(), async (req, res) => {
   res.clearCookie("sessionId").redirect("/");
 });
 
-app.get("/notes", auth(), async (req, res) => {
+app.get("/dashboard", auth(), async (req, res) => {
+  res.render('dashboard.njk', {
+    user: req.user,
+  });
+});
+
+app.get("/note", auth(), async (req, res) => {
   const age = req.query.age || '1week';
   const search = req.query.search;
   const page = req.query.page || 1;
@@ -85,44 +91,44 @@ app.get("/notes", auth(), async (req, res) => {
   res.json(notes);
 });
 
-app.get("/notes/:id", auth(), async (req, res) => {
+app.get("/note/:id", auth(), async (req, res) => {
   const id = req.params.id;
   const notes = await readNoteById(id, req.user.id);
   res.json(notes);
 });
 
-app.post("/notes", auth(), async (req, res) => {
+app.post("/note/new", auth(), async (req, res) => {
   const { title, text } = req.body;
   const newNote = await createNote(req.user.id, title, text);
   res.status(201).json(newNote);
 });
 
-app.patch("/notes/:id", auth(), async (req, res) => {
+app.patch("/note/:id/edit", auth(), async (req, res) => {
   const id = req.params.id;
   const { title, text } = req.body;
   await updateNote(id, req.user.id, title, text);
   res.status(201);
 });
 
-app.post("/notes/:id/archive", auth(), async (req, res) => {
+app.post("/note/:id/archive", auth(), async (req, res) => {
   const id = req.params.id;
   await archiveNote(id, req.user.id);
   res.status(201);
 });
 
-app.post("/notes/:id/unarchive", auth(), async (req, res) => {
+app.post("/note/:id/unarchive", auth(), async (req, res) => {
   const id = req.params.id;
   await unarchiveNote(id, req.user.id);
   res.status(201);
 });
 
-app.delete("/notes/:id", auth(), async (req, res) => {
+app.delete("/note/:id", auth(), async (req, res) => {
   const id = req.params.id;
   await deleteNote(id, req.user.id);
   res.status(201);
 });
 
-app.delete("/notes", auth(), async (req, res) => {
+app.delete("/note", auth(), async (req, res) => {
   await deleteArchiveNotes(id, req.user.id);
   res.status(201);
 });
@@ -212,8 +218,8 @@ const readNotes = async (userId, age, search, page = 1) => {
 
 const readNoteById = async (id, userId) =>
   await knex("notes").select().where({
-    is: id,
-    iser_id: userId,
+    id: id,
+    user_id: userId,
   });
 
 const createNote = async (userId, title, text) => {
