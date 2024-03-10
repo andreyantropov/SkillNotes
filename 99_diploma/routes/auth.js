@@ -23,7 +23,10 @@ router.post("/signup", bodyParser.urlencoded({ extended: false }), async (req, r
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
-    const id = await createUser(username, password);
+
+    const { id } = await createUser(username, password);
+    await createDemoNote(id);
+
     const sessionId = await createSession(id);
     res.cookie("sessionId", sessionId, { httpOnly: true }).redirect("/dashboard");
   } catch (err) {
@@ -67,21 +70,30 @@ router.get("/logout", auth(), async (req, res) => {
 const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");
 
 const findUserByUsername = async (username) =>
-  knex("users")
+  await knex("users")
     .select()
     .where({ username })
     .limit(1)
     .then((results) => results[0]);
 
-const createUser = async (username, password) => {
-  const newUser = await knex("users")
+const createUser = async (username, password) =>
+  await knex("users")
     .insert({
       username: username,
       password: hash(password),
     })
-    .returning('id');
-  return newUser;
-};
+    .returning('*')
+    .then((results) => results[0]);
+
+const createDemoNote = async (userId) =>
+await knex("notes")
+.insert({
+  user_id: userId,
+  title: 'Demo',
+  text: '# Marked in Node.js\n\nRendered by **marked**.',
+})
+.returning('*')
+.then((results) => results[0]);
 
 const createSession = async (userId) => {
   const sessionId = nanoid();
@@ -98,7 +110,8 @@ const deleteSession = async (sessionId) => {
   await knex("sessions")
     .where({ session_id: sessionId })
     .delete()
-    .returning('id');
+    .returning('id')
+    .then((results) => results[0]);
 };
 
 module.exports = router;
