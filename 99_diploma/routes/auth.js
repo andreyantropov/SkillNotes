@@ -86,14 +86,14 @@ const createUser = async (username, password) =>
     .then((results) => results[0]);
 
 const createDemoNote = async (userId) =>
-await knex("notes")
-.insert({
-  user_id: userId,
-  title: 'Demo',
-  text: '# Marked in Node.js\n\nRendered by **marked**.',
-})
-.returning('*')
-.then((results) => results[0]);
+  await knex("notes")
+    .insert({
+      user_id: userId,
+      title: 'Demo',
+      text: '# Marked in Node.js\n\nRendered by **marked**.',
+    })
+    .returning('*')
+    .then((results) => results[0]);
 
 const createSession = async (userId) => {
   const sessionId = nanoid();

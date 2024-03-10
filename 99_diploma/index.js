@@ -24,17 +24,25 @@ app.use(express.static("public"));
 app.use(authRoutes);
 app.use(noteRoutes);
 
-app.get("/", auth(), (req, res) => {
-  res.render("index", {
-    user: req.user,
-    authError: req.query.authError === "true" ? "Wrong username or password" : req.query.authError,
-  });
+app.get("/", auth(), async (req, res) => {
+  if (req.user) {
+    res.redirect('/dashboard');
+  } else {
+    res.render("index", {
+      user: req.user,
+      authError: req.query.authError === "true" ? "Wrong username or password" : req.query.authError,
+    });
+  }
 });
 
 app.get("/dashboard", auth(), async (req, res) => {
-  res.render('dashboard.njk', {
-    username: req.user.username,
-  });
+  if (!req.user) {
+    res.redirect('/');
+  } else {
+    res.render('dashboard.njk', {
+      username: req.user.username,
+    });
+  }
 });
 
 app.use((err, req, res, next) => {

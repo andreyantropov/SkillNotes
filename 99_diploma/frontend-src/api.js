@@ -10,16 +10,16 @@ const req = (url, options = {}) => {
       ...options.headers,
       ...(body
         ? {
-            "Content-Type": "application/json",
-          }
+          "Content-Type": "application/json",
+        }
         : null),
     },
   }).then((res) =>
     res.ok
       ? res.json()
       : res.text().then((message) => {
-          throw new Error(message);
-        }),
+        throw new Error(message);
+      }),
   );
 };
 
@@ -93,4 +93,4 @@ export const deleteAllArchived = async () => {
   });
 };
 
-export const notePdfUrl = (id) => {};
+export const notePdfUrl = (id) => { };
