@@ -126,7 +126,9 @@
     </p> -->
 
     {#each entries as entry}
-      <NoteCard {entry} isActive={entry._id === activeNoteId} />
+      {#if entry && entry.id}
+        <NoteCard {entry} isActive={entry.id === activeNoteId} />
+      {/if}
     {/each}
 
     {#await fetching}

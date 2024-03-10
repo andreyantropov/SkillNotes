@@ -34,10 +34,20 @@ export const getNotes = async ({ age, search, page } = {}) => {
 };
 
 export const createNote = async (title, text) => {
-  await fetch(`${PREFIX}/notes`, {
+  const response = await fetch(`${PREFIX}/notes`, {
     method: "POST",
-    data: { title, text },
+    body: JSON.stringify({ title, text }),
+    headers: {
+      "Content-Type": "application/json"
+    }
   });
+
+  if (!response.ok) {
+    console.error(response);
+  }
+
+  const newNote = await response.json();
+  return newNote[0];
 };
 
 export const getNote = async (id) => {

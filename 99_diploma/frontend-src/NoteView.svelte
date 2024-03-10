@@ -49,7 +49,7 @@
     {/if}
 
     <button on:click={doEdit} class="uk-button uk-button-primary"><i class="fas fa-edit" />&nbsp;Редактировать</button>
-    <!-- <a href={notePdfUrl(entry._id)} class="uk-button uk-button-secondary"><i
+    <!-- <a href={notePdfUrl(entry.id)} class="uk-button uk-button-secondary"><i
         class="fas fa-file-download" />&nbsp;PDF</a> -->
     <button on:click={close} class="uk-button uk-button-default"><i class="fas fa-times" />&nbsp;Закрыть</button>
   </div>
