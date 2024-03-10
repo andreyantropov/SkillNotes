@@ -11,13 +11,21 @@ const knex = require("knex")({
 
 const auth = () => async (req, res, next) => {
   if (!req.cookies["sessionId"]) {
-    return next();
+    return res.redirect('/');
   }
+
   const user = await findUserBySessionId(req.cookies["sessionId"]);
   req.user = user;
   req.sessionId = req.cookies["sessionId"];
   next();
 };
+
+const redirectLoggedIn = () => async (req, res, next) => {
+  if (req.cookies["sessionId"]) {
+    return res.redirect('/dashboard');
+  }
+  next();
+}
 
 const findUserBySessionId = async (sessionId) => {
   const session = await knex("sessions")
@@ -39,4 +47,5 @@ const findUserBySessionId = async (sessionId) => {
 
 module.exports = {
   auth: auth,
+  redirectLoggedIn: redirectLoggedIn,
 }

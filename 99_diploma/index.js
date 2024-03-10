@@ -4,7 +4,7 @@ const express = require("express");
 const nunjucks = require("nunjucks");
 const cookieParser = require("cookie-parser");
 
-const { auth } = require('./middleware/auth');
+const { auth, redirectLoggedIn } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const noteRoutes = require('./routes/notes');
 
@@ -24,25 +24,17 @@ app.use(express.static("public"));
 app.use(authRoutes);
 app.use(noteRoutes);
 
-app.get("/", auth(), async (req, res) => {
-  if (req.user) {
-    res.redirect('/dashboard');
-  } else {
-    res.render("index", {
-      user: req.user,
-      authError: req.query.authError === "true" ? "Wrong username or password" : req.query.authError,
-    });
-  }
+app.get("/", redirectLoggedIn(), async (req, res) => {
+  res.render("index", {
+    user: req.user,
+    authError: req.query.authError === "true" ? "Wrong username or password" : req.query.authError,
+  });
 });
 
 app.get("/dashboard", auth(), async (req, res) => {
-  if (!req.user) {
-    res.redirect('/');
-  } else {
-    res.render('dashboard.njk', {
-      username: req.user.username,
-    });
-  }
+  res.render('dashboard.njk', {
+    username: req.user.username,
+  });
 });
 
 app.use((err, req, res, next) => {
