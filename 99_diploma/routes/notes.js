@@ -186,15 +186,17 @@ const readNoteById = async (id, userId) =>
       id: id,
       user_id: userId,
     })
-    .first();
+    .then((results) => results[0]);
 
-const createNote = async (userId, title, text) => await knex("notes")
-  .insert({
-    user_id: userId,
-    title: title,
-    text: text,
-  })
-  .returning('*');
+const createNote = async (userId, title, text) =>
+  await knex("notes")
+    .insert({
+      user_id: userId,
+      title: title,
+      text: text,
+    })
+    .returning('*')
+    .then((results) => results[0]);
 
 const updateNote = async (id, userId, title, text) =>
   await knex("notes")
@@ -203,7 +205,8 @@ const updateNote = async (id, userId, title, text) =>
       text: text,
     })
     .where({ id: id, user_id: userId })
-    .returning('*');
+    .returning('*')
+    .then((results) => results[0]);
 
 const archiveNote = async (id, userId) =>
   await knex("notes")
@@ -211,7 +214,8 @@ const archiveNote = async (id, userId) =>
       is_archive: true,
     })
     .where({ id: id, user_id: userId })
-    .returning('*');
+    .returning('*')
+    .then((results) => results[0]);
 
 const unarchiveNote = async (id, userId) =>
   await knex("notes")
@@ -219,7 +223,8 @@ const unarchiveNote = async (id, userId) =>
       is_archive: false,
     })
     .where({ id: id, user_id: userId })
-    .returning('*');
+    .returning('*')
+    .then((results) => results[0]);
 
 const deleteNote = async (id, userId) =>
   await knex("notes")
@@ -228,7 +233,8 @@ const deleteNote = async (id, userId) =>
       user_id: userId,
     })
     .delete()
-    .returning('id');
+    .returning('id')
+    .then((results) => results[0]);
 
 const deleteArchiveNotes = async (userId) =>
   await knex("notes")

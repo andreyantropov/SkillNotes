@@ -50,7 +50,7 @@ export const createNote = async (title, text) => {
   }
 
   const newNote = await response.json();
-  return newNote[0];
+  return newNote;
 };
 
 export const getNote = async (id) => {
