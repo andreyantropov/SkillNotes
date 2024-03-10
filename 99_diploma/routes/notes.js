@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { marked } = require('marked');
+
 const { auth } = require('../middleware/auth');
 
 const knex = require("knex")({
@@ -41,9 +43,9 @@ router.get("/notes", auth(), async (req, res) => {
 router.get("/notes/:id", auth(), async (req, res) => {
   try {
     const id = req.params.id;
-    const notes = await readNoteById(id, req.user.id);
-    if (notes) {
-      res.json(notes);
+    const note = await readNoteById(id, req.user.id);
+    if (note) {
+      res.json({ ...note, html: marked.parse(note.text), });
     } else {
       res.status(404).json({ message: 'Note not found' });
     }
@@ -178,10 +180,13 @@ const readNotes = async (userId, age = '1week', search = '', page = 1) => {
 };
 
 const readNoteById = async (id, userId) =>
-  await knex("notes").select().where({
-    id: id,
-    user_id: userId,
-  });
+  await knex("notes")
+    .select()
+    .where({
+      id: id,
+      user_id: userId,
+    })
+    .first();
 
 const createNote = async (userId, title, text) => await knex("notes")
   .insert({

@@ -54,7 +54,9 @@ export const createNote = async (title, text) => {
 };
 
 export const getNote = async (id) => {
-  return await fetch(`${PREFIX}/notes/${id}`);
+  const response = await fetch(`${PREFIX}/notes/${id}`);
+  const note = await response.json();
+  return note;
 };
 
 export const archiveNote = async (id) => {
