@@ -24,8 +24,14 @@ const Age = {
 router.get("/notes", auth(), async (req, res) => {
   try {
     const { age, search, page } = req.query;
-    const notes = readNotes(req.user.id, age, search, page);
-    res.json(notes);
+
+    const notes = await readNotes(req.user.id, age, search, page);
+
+    const data = {
+      data: notes,
+      hasMore: false, //TODO
+    }
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);

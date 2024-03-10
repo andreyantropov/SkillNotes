@@ -30,7 +30,10 @@ export const getNotes = async ({ age, search, page } = {}) => {
     page
   });
 
-  return await fetch(`${PREFIX}/notes?${queryParams}`);
+  const response = await fetch(`${PREFIX}/notes?${queryParams}`);
+
+  const notes = await response.json();
+  return notes;
 };
 
 export const createNote = async (title, text) => {
