@@ -42,7 +42,7 @@ export const createNote = async (title, text) => {
     body: JSON.stringify({ title, text }),
     headers: {
       "Content-Type": "application/json"
-    }
+    },
   });
 
   if (!response.ok) {
@@ -65,7 +65,7 @@ export const archiveNote = async (id) => {
   });
 };
 
-export const unarchiveNote = async () => {
+export const unarchiveNote = async (id) => {
   await fetch(`${PREFIX}/notes/${id}/unarchive`, {
     method: "POST",
   });
@@ -74,7 +74,10 @@ export const unarchiveNote = async () => {
 export const editNote = async (id, title, text) => {
   await fetch(`${PREFIX}/notes/${id}`, {
     method: "PATCH",
-    data: { title, text },
+    body: JSON.stringify({ title, text }),
+    headers: {
+      "Content-Type": "application/json"
+    },
   });
 };
 
