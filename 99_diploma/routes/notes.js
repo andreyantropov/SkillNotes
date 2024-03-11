@@ -29,7 +29,13 @@ router.get("/notes", auth(), async (req, res) => {
   try {
     const { age, search, page } = req.query;
 
-    const notes = await readNotes(req.user.id, age, search, page);
+    const notes = await readNotes(req.user.id, age, search, page)
+      .then((notes) => {
+        if (!!search) {
+          notes = highlightSubstring(notes, search);
+        }
+        return notes;
+      });
 
     const data = {
       data: notes,
@@ -187,10 +193,7 @@ const readNotes = async (userId, age = '1week', search = '', page = 1) => {
   }
 
   if (!!search) {
-    query = query.andWhere(function () {
-      this.whereRaw(`upper(text) like upper('%${search}%')`)
-        .orWhereRaw(`upper(title) like upper('%${search}%')`);
-    });
+    query = query.andWhereRaw(`upper(title) like upper('%${search}%')`);
   }
 
   query = query.distinct();
@@ -262,5 +265,20 @@ const deleteArchiveNotes = async (userId) =>
     })
     .delete()
     .returning('id');
+
+    const highlightSubstring = (notes, search) => {
+      const searchTerm = search.toLowerCase();
+
+      notes.forEach(note => {
+        const titleLower = note.title.toLowerCase();
+
+        if (titleLower.includes(searchTerm)) {
+          const regex = new RegExp(searchTerm, 'gi');
+          note.title = note.title.replace(regex, (match) => `<mark>${match}</mark>`);
+        }
+      });
+
+      return notes;
+    }
 
 module.exports = router;
