@@ -159,42 +159,41 @@ router.get("/notes/:id/download", auth(), async (req, res) => {
 const readNotes = async (userId, age = '1week', search = '', page = 1) => {
   const offset = 20 * (page - 1);
 
-  let query = knex("notes").where({ user_id: userId });
+  let query = knex("notes")
+    .where({ user_id: userId });
 
   switch (age) {
     case Age.ONE_WEEK:
-      query = query.where("created_at", ">=", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+      query = query
+        .andWhere({ is_archive: false })
+        .andWhere("created_at", ">=", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
       break;
     case Age.ONE_MONTH:
-      query = query.where("created_at", ">=", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+      query = query
+        .andWhere({ is_archive: false })
+        .andWhere("created_at", ">=", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
       break;
     case Age.THREE_MONTH:
-      query = query.where("created_at", ">=", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
+      query = query
+        .andWhere({ is_archive: false })
+        .andWhere("created_at", ">=", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
       break;
     case Age.ARCHIVE:
-      query = query.where({ is_archive: true });
+      query = query.andWhere({ is_archive: true });
       break;
     case Age.ALL_TIME:
     default:
       break;
   }
 
-  if (age && age !== 'alltime') {
-    if (age === '1week') {
-      query = query.where({ is_archive: false }).where("created_at", ">=", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-    } else if (age === '1month') {
-      query = query.where({ is_archive: false }).where("created_at", ">=", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
-    } else if (age === '3month') {
-      query = query.where({ is_archive: false }).where("created_at", ">=", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
-    } else if (age === 'archive') {
-      query = query.where({ is_archive: true });
-    }
+  if (!!search) {
+    query = query.andWhere(function () {
+      this.whereRaw(`upper(text) like upper('%${search}%')`)
+        .orWhereRaw(`upper(title) like upper('%${search}%')`);
+    });
   }
 
-  if (search) {
-    query = query.where("text", "like", `%${search}%`).orWhere("title", "like", `%${search}%`);
-  }
-
+  query = query.distinct();
   return await query.limit(20).offset(offset);
 };
 
