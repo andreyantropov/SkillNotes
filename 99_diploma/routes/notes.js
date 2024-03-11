@@ -29,18 +29,14 @@ router.get("/notes", auth(), async (req, res) => {
   try {
     const { age, search, page } = req.query;
 
-    const notes = await readNotes(req.user.id, age, search, page)
-      .then((notes) => {
+    const data = await readNotes(req.user.id, age, search, page)
+      .then((data) => {
         if (!!search) {
-          notes = highlightSubstring(notes, search);
+          data.data = highlightSubstring(data.data, search);
         }
-        return notes;
+        return data;
       });
 
-    const data = {
-      data: notes,
-      hasMore: false, //TODO
-    }
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -197,7 +193,15 @@ const readNotes = async (userId, age = '1week', search = '', page = 1) => {
   }
 
   query = query.distinct();
-  return await query.limit(20).offset(offset);
+
+  let notes = await query.limit(20).offset(offset); let hasMore = false;
+  if (notes.length === 20) {
+    hasMore = true;
+  }
+  return {
+    data: notes,
+    hasMore: hasMore,
+  };
 };
 
 const readNoteById = async (id, userId) =>
@@ -266,19 +270,19 @@ const deleteArchiveNotes = async (userId) =>
     .delete()
     .returning('id');
 
-    const highlightSubstring = (notes, search) => {
-      const searchTerm = search.toLowerCase();
+const highlightSubstring = (notes, search) => {
+  const searchTerm = search.toLowerCase();
 
-      notes.forEach(note => {
-        const titleLower = note.title.toLowerCase();
+  notes.forEach(note => {
+    const titleLower = note.title.toLowerCase();
 
-        if (titleLower.includes(searchTerm)) {
-          const regex = new RegExp(searchTerm, 'gi');
-          note.title = note.title.replace(regex, (match) => `<mark>${match}</mark>`);
-        }
-      });
-
-      return notes;
+    if (titleLower.includes(searchTerm)) {
+      const regex = new RegExp(searchTerm, 'gi');
+      note.title = note.title.replace(regex, (match) => `<mark>${match}</mark>`);
     }
+  });
+
+  return notes;
+}
 
 module.exports = router;
