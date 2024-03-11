@@ -93,4 +93,6 @@ export const deleteAllArchived = async () => {
   });
 };
 
-export const notePdfUrl = (id) => { };
+export const notePdfUrl = (id) => {
+  return `${PREFIX}/notes/${id}/download`;
+};

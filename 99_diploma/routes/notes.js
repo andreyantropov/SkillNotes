@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { marked } = require('marked');
+const markdownPdf = require('markdown-pdf');
+const { Readable } = require("stream");
 
 const { auth } = require('../middleware/auth');
 
@@ -44,11 +46,10 @@ router.get("/notes/:id", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const note = await readNoteById(id, req.user.id);
-    if (note) {
-      res.json({ ...note, html: marked.parse(note.text), isArchived: note.is_archive, });
-    } else {
-      res.status(404).json({ message: 'Note not found' });
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
     }
+    res.json({ ...note, html: marked.parse(note.text), isArchived: note.is_archive, });
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
@@ -71,11 +72,10 @@ router.patch("/notes/:id", auth(), async (req, res) => {
     const id = req.params.id;
     const { title, text } = req.body;
     const updNote = await updateNote(id, req.user.id, title, text);
-    if (updNote) {
-      res.status(201).json(updNote);
-    } else {
-      res.status(404).json({ message: 'Note not found' });
+    if (!updNote) {
+      return res.status(404).json({ message: 'Note not found' });
     }
+    res.status(201).json(updNote);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
@@ -86,11 +86,10 @@ router.post("/notes/:id/archive", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const updNote = await archiveNote(id, req.user.id);
-    if (updNote) {
-      res.status(201).json(updNote);
-    } else {
-      res.status(404).json({ message: 'Note not found' });
+    if (!updNote) {
+      return res.status(404).json({ message: 'Note not found' });
     }
+    res.status(201).json(updNote);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
@@ -101,11 +100,10 @@ router.post("/notes/:id/unarchive", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const updNote = await unarchiveNote(id, req.user.id);
-    if (updNote) {
-      res.status(201).json(updNote);
-    } else {
-      res.status(404).json({ message: 'Note not found' });
+    if (!updNote) {
+      return res.status(404).json({ message: 'Note not found' });
     }
+    res.status(201).json(updNote);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
@@ -116,11 +114,10 @@ router.delete("/notes/:id", auth(), async (req, res) => {
   try {
     const id = req.params.id;
     const delNote = await deleteNote(id, req.user.id);
-    if (delNote) {
-      res.status(201).json(delNote);
-    } else {
-      res.status(404).json({ message: 'Note not found' });
+    if (!delNote) {
+      return res.status(404).json({ message: 'Note not found' });
     }
+    res.status(201).json(delNote);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
@@ -131,6 +128,28 @@ router.delete("/notes", auth(), async (req, res) => {
   try {
     const delNote = await deleteArchiveNotes(req.user.id);
     res.status(201).json(delNote);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
+router.get("/notes/:id/download", auth(), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const note = await readNoteById(id, req.user.id);
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+
+    const fileName = `${note.title}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    const markdownStream = new Readable();
+    markdownStream.push(note.text);
+    markdownStream.push(null);
+    markdownStream.pipe(markdownPdf()).pipe(res);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
