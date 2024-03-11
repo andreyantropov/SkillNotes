@@ -51,7 +51,7 @@ router.get("/notes/:id", auth(), async (req, res) => {
     if (!note) {
       return res.status(404).json({ message: 'Note not found' });
     }
-    res.json({ ...note, html: marked.parse(note.text), isArchived: note.is_archive, });
+    res.json(note);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
@@ -194,7 +194,14 @@ const readNotes = async (userId, age = '1week', search = '', page = 1) => {
 
   query = query.distinct();
 
-  let notes = await query.limit(20).offset(offset); let hasMore = false;
+  const notes = await query
+  .limit(20)
+  .offset(offset)
+  .then((notes) => {
+    return notes.map(note => mapper(note));
+  });
+
+  let hasMore = false;
   if (notes.length === 20) {
     hasMore = true;
   }
@@ -211,7 +218,8 @@ const readNoteById = async (id, userId) =>
       id: id,
       user_id: userId,
     })
-    .then((results) => results[0]);
+    .then((results) => results[0])
+    .then((note) => mapper(note));
 
 const createNote = async (userId, title, text) =>
   await knex("notes")
@@ -221,7 +229,8 @@ const createNote = async (userId, title, text) =>
       text: text,
     })
     .returning('*')
-    .then((results) => results[0]);
+    .then((results) => results[0])
+    .then((note) => mapper(note));
 
 const updateNote = async (id, userId, title, text) =>
   await knex("notes")
@@ -231,7 +240,8 @@ const updateNote = async (id, userId, title, text) =>
     })
     .where({ id: id, user_id: userId })
     .returning('*')
-    .then((results) => results[0]);
+    .then((results) => results[0])
+    .then((note) => mapper(note));
 
 const archiveNote = async (id, userId) =>
   await knex("notes")
@@ -240,7 +250,8 @@ const archiveNote = async (id, userId) =>
     })
     .where({ id: id, user_id: userId })
     .returning('*')
-    .then((results) => results[0]);
+    .then((results) => results[0])
+    .then((note) => mapper(note));
 
 const unarchiveNote = async (id, userId) =>
   await knex("notes")
@@ -249,7 +260,8 @@ const unarchiveNote = async (id, userId) =>
     })
     .where({ id: id, user_id: userId })
     .returning('*')
-    .then((results) => results[0]);
+    .then((results) => results[0])
+    .then((note) => mapper(note));
 
 const deleteNote = async (id, userId) =>
   await knex("notes")
@@ -283,6 +295,10 @@ const highlightSubstring = (notes, search) => {
   });
 
   return notes;
+}
+
+const mapper = (note) => {
+  return { ...note, isArchived: note.is_archive, createdAt: note.created_at, userId: note.user_id, html: marked.parse(note.text), };
 }
 
 module.exports = router;

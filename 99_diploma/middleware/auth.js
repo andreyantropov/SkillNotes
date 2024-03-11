@@ -15,7 +15,7 @@ const auth = () => async (req, res, next) => {
   }
 
   const user = await findUserBySessionId(req.cookies["sessionId"]);
-  req.user = user;
+  req.user = { id: user.id, username: user.username, };
   req.sessionId = req.cookies["sessionId"];
   next();
 };
