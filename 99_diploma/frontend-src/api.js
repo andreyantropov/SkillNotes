@@ -1,4 +1,4 @@
-const PREFIX = "???";
+const PREFIX = "http://localhost:3000";
 
 const req = (url, options = {}) => {
   const { body } = options;
@@ -10,33 +10,89 @@ const req = (url, options = {}) => {
       ...options.headers,
       ...(body
         ? {
-            "Content-Type": "application/json",
-          }
+          "Content-Type": "application/json",
+        }
         : null),
     },
   }).then((res) =>
     res.ok
       ? res.json()
       : res.text().then((message) => {
-          throw new Error(message);
-        })
+        throw new Error(message);
+      }),
   );
 };
 
-export const getNotes = ({ age, search, page } = {}) => {};
+export const getNotes = async ({ age, search, page } = {}) => {
+  const queryParams = new URLSearchParams({
+    age,
+    search,
+    page
+  });
 
-export const createNote = (title, text) => {};
+  const response = await fetch(`${PREFIX}/notes?${queryParams}`);
 
-export const getNote = (id) => {};
+  const notes = await response.json();
+  return notes;
+};
 
-export const archiveNote = {};
+export const createNote = async (title, text) => {
+  const response = await fetch(`${PREFIX}/notes`, {
+    method: "POST",
+    body: JSON.stringify({ title, text }),
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
 
-export const unarchiveNote = {};
+  if (!response.ok) {
+    console.error(response);
+  }
 
-export const editNote = (id, title, text) => {};
+  const newNote = await response.json();
+  return newNote;
+};
 
-export const deleteNote = (id) => {};
+export const getNote = async (id) => {
+  const response = await fetch(`${PREFIX}/notes/${id}`);
+  const note = await response.json();
+  return note;
+};
 
-export const deleteAllArchived = () => {};
+export const archiveNote = async (id) => {
+  await fetch(`${PREFIX}/notes/${id}/archive`, {
+    method: "POST",
+  });
+};
 
-export const notePdfUrl = (id) => {};
+export const unarchiveNote = async (id) => {
+  await fetch(`${PREFIX}/notes/${id}/unarchive`, {
+    method: "POST",
+  });
+};
+
+export const editNote = async (id, title, text) => {
+  await fetch(`${PREFIX}/notes/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title, text }),
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+};
+
+export const deleteNote = async (id) => {
+  await fetch(`${PREFIX}/notes/${id}`, {
+    method: "DELETE",
+  });
+};
+
+export const deleteAllArchived = async () => {
+  await fetch(`${PREFIX}/notes`, {
+    method: "DELETE",
+  });
+};
+
+export const notePdfUrl = (id) => {
+  return `${PREFIX}/notes/${id}/download`;
+};
