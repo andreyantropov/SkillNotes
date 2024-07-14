@@ -25,7 +25,7 @@
       return;
     }
     const note = await createNote(title, text);
-    dispatch("routeEvent", { type: "note-created", id: note._id });
+    dispatch("routeEvent", { type: "note-created", id: note.id });
   };
 
   const cancel = () => {
