@@ -6,6 +6,7 @@
   "keywords": [],
   "main": "index.js",
   "scripts": {
+    "build": "rimraf public/bundle.* && rollup --config",
     "db:migrate": "knex migrate:latest",
     "start": "cross-env npm run db:migrate && npm run build && node index.js",
     "dev": "cross-env npm run db:migrate && npm run build && nodemon index.js -e js,njk",
@@ -13,8 +14,7 @@
     "prettify": "prettier --write",
     "prettify:all": "prettier --write \"./**/*.{js,json}\"",
     "lint": "eslint",
-    "lint:all": "eslint \"**/*.js\"",
-    "build": "rimraf public/bundle.* && rollup --config"
+    "lint:all": "eslint \"**/*.js\""
   },
   "engines": {
     "node": "=12.x || =14.x || =15.x"
