@@ -44,7 +44,7 @@ npm run start
 ```
 5. Доступ: Откройте `http://localhost:3000` в вашем браузере.
 
-## Подробное описание команд:
+## Подробное описание команд
 
 1. "dev": "webpack serve --mode development"
 
